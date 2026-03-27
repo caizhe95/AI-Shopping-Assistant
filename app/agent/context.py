@@ -11,8 +11,7 @@ def trim_messages_window(messages, max_messages=8):
         return [] 
     system_messages = [message for message in messages if isinstance(message, SystemMessage)] 
     other_messages = [message for message in messages if not isinstance(message, SystemMessage)] 
-    trimmed = other_messages[-max_messages:] if max_messages else [] 
-    return system_messages[:1] + trimmed 
+    return system_messages[:1] + list(other_messages) 
  
 def trim_steps_window(steps, max_steps=4): 
     if not steps: 
@@ -23,17 +22,17 @@ def trim_steps_window(steps, max_steps=4):
 def merge_confirmed_facts(state): 
     facts = dict(state.get('confirmed_facts') or {}) 
     query = _text(state.get('user_query')) 
-    if query and '预算' in query: 
+    if query and '\u9884\u7b97' in query: 
         match = re.search(r'(\d+(?:\.\d+)?)', query) 
         if match: 
             facts['budget'] = match.group(1) 
-    category_map = {'轻薄本': '轻薄本', '笔记本': '笔记本', '手机': '手机', '平板': '平板', '耳机': '耳机', '手表': '手表'} 
+    category_map = {'\u8f7b\u8584\u672c': '\u8f7b\u8584\u672c', '\u7b14\u8bb0\u672c': '\u7b14\u8bb0\u672c', '\u624b\u673a': '\u624b\u673a', '\u5e73\u677f': '\u5e73\u677f', '\u8033\u673a': '\u8033\u673a', '\u624b\u8868': '\u624b\u8868'} 
     for keyword, label in category_map.items(): 
         if keyword in query: 
             facts['category'] = label 
             break 
-    if '自有品牌' in query: 
-        facts['brand_preference'] = '自有品牌优先' 
+    if '\u81ea\u6709\u54c1\u724c' in query: 
+        facts['brand_preference'] = '\u81ea\u6709\u54c1\u724c\u4f18\u5148' 
     task_type = _text(state.get('task_type')) 
     if task_type: 
         facts['task_type'] = task_type 
@@ -56,16 +55,16 @@ def build_reasoning_summary(state):
     parts = [] 
     task_type = _text(state.get('task_type')) 
     if task_type: 
-        parts.append('当前任务：' + task_type) 
+        parts.append('\u5f53\u524d\u4efb\u52a1\uff1a' + task_type) 
     if facts.get('budget'): 
-        parts.append('预算：' + _text(facts.get('budget'))) 
+        parts.append('\u9884\u7b97\uff1a' + _text(facts.get('budget'))) 
     if facts.get('category'): 
-        parts.append('品类：' + _text(facts.get('category'))) 
+        parts.append('\u54c1\u7c7b\uff1a' + _text(facts.get('category'))) 
     if facts.get('brand_preference'): 
-        parts.append('品牌偏好：' + _text(facts.get('brand_preference'))) 
+        parts.append('\u54c1\u724c\u504f\u597d\uff1a' + _text(facts.get('brand_preference'))) 
     done_actions = state.get('done_actions') or [] 
     if done_actions: 
-        parts.append('已执行：' + '、'.join(done_actions[-4:])) 
+        parts.append('\u5df2\u6267\u884c\uff1a' + '\u3001'.join(done_actions[-4:])) 
     candidate_items = state.get('filtered_products') or state.get('retrieved_products') or state.get('comparison_candidates') or [] 
     if candidate_items: 
         names = [] 
@@ -74,7 +73,6 @@ def build_reasoning_summary(state):
             if name: 
                 names.append(name) 
         if names: 
-            parts.append('当前候选：' + '、'.join(names)) 
-    summary = '；'.join(part for part in parts if part) 
+            parts.append('\u5f53\u524d\u5019\u9009\uff1a' + '\u3001'.join(names)) 
+    summary = '\uff1b'.join(part for part in parts if part) 
     state['reasoning_summary'] = summary 
-    return summary
