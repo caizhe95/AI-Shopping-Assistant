@@ -1,0 +1,63 @@
+services:  
+  api:  
+    build: .  
+    container_name: smart-shopping-api  
+    env_file:  
+      - .env  
+    environment:  
+      ENV: docker  
+      DEBUG: false  
+      MYSQL_HOST: mysql  
+      MYSQL_PORT: 3306  
+      MYSQL_USER: shop_agent  
+      MYSQL_PASSWORD: 123  
+      MYSQL_DB: smart_shopping_agent  
+      REDIS_URL: redis://redis:6379/0  
+      API_V1_PREFIX: /api/v1  
+    ports:  
+      - 8000:8000  
+    depends_on:  
+      mysql:  
+        condition: service_healthy  
+      redis:  
+        condition: service_healthy  
+    restart: unless-stopped  
+  
+  mysql:  
+    image: mysql:8.0  
+    container_name: smart-shopping-mysql  
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci  
+    environment:  
+      MYSQL_ROOT_PASSWORD: rootpass  
+      MYSQL_DATABASE: smart_shopping_agent  
+      MYSQL_USER: shop_agent  
+      MYSQL_PASSWORD: 123  
+    ports:  
+      - 3306:3306  
+    volumes:  
+      - mysql_data:/var/lib/mysql  
+    healthcheck:  
+      test: [CMD, mysqladmin, ping, -h, 127.0.0.1, -uroot, -prootpass]  
+      interval: 5s  
+      timeout: 5s  
+      retries: 20  
+      start_period: 20s  
+    restart: unless-stopped  
+  
+  redis:  
+    image: redis:7-alpine  
+    container_name: smart-shopping-redis  
+    ports:  
+      - 6379:6379  
+    volumes:  
+      - redis_data:/data  
+    healthcheck:  
+      test: [CMD, redis-cli, ping]  
+      interval: 5s  
+      timeout: 3s  
+      retries: 20  
+    restart: unless-stopped  
+  
+volumes:  
+  mysql_data:  
+  redis_data: 
